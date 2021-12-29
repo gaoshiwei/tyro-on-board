@@ -102,8 +102,8 @@ func TransactionPerson(w http.ResponseWriter, r *http.Request) {
 
 // TestTransaction
 // Db.Begin()        	开始事务
-// Db.Commit()        	开始事务
-// Db.Rollback()        开始事务
+// Db.Commit()        	提交事务
+// Db.Rollback()        回滚事务
 func TestTransaction() {
 	conn, err := Db.Begin()
 	if err != nil {
