@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 type Person struct {
@@ -43,12 +46,25 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Insert(w http.ResponseWriter, r *http.Request) {
-	InsertPerson()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var person Person
+	json.Unmarshal(body, &person)
+	fmt.Println(person)
+	// TODO Param validate
+	InsertPerson(&person)
 }
 
 func SelectPerson(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	userId, err := strconv.Atoi(query.Get("user_id"))
+	if err != nil {
+		fmt.Println("url param wrong, ", err)
+	}
 	var person []Person
-	err := Db.Select(&person, "select user_id, username, sex, email from person where user_id = ?", 3)
+	err = Db.Select(&person, "select user_id, username, sex, email from person where user_id = ?", userId)
 	if err != nil {
 		fmt.Println("exec failed, ", err)
 		return
@@ -56,8 +72,8 @@ func SelectPerson(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("select success:", person)
 }
 
-func InsertPerson() {
-	r, err := Db.Exec("insert into person(username, sex, email)values(?, ?, ?)", "test1", "man", "test1@qq.com")
+func InsertPerson(person *Person) {
+	r, err := Db.Exec("insert into person(username, sex, email)values(?, ?, ?)", person.UserName, person.Sex, person.Email)
 	if err != nil {
 		fmt.Println("exec failed, ", err)
 		return
@@ -71,7 +87,15 @@ func InsertPerson() {
 }
 
 func UpdatePerson(w http.ResponseWriter, r *http.Request) {
-	res, err := Db.Exec("update person set username=? where user_id=?", "test2", 3)
+	body, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	var person Person
+	json.Unmarshal(body, &person)
+	fmt.Println(person)
+	res, err := Db.Exec("update person set username=? where user_id=?", person.UserName, person.UserId)
 	if err != nil {
 		fmt.Println("exec failed, ", err)
 		return
