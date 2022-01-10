@@ -1,0 +1,30 @@
+version: '3'
+services:
+  app:
+    container_name: go-app
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    tty: true
+    links:
+      - mysql
+    depends_on:
+      - mysql
+  
+  mysql:
+    container_name: mysql
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: test
+      MYSQL_ROOT_PASSWORD: 123456
+      TZ: Asia/Shanghai
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./sources/mysql:/docker-entrypoint-initdb.d
+    ports:
+      - "3308:3306"

@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -21,12 +22,15 @@ var Db *sqlx.DB
 
 func init() {
 	// database, err := sqlx.Open("数据库类型", "用户名:密码@tcp(地址:端口)/数据库名")
-	database, err := sqlx.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+	// database, err := sqlx.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+	// 使用docker-compose起的时候需要使用下面的这行去访问mysql
+	database, err := sqlx.Open("mysql", "root:123456@tcp(mysql:3306)/test")
 	if err != nil {
-		fmt.Println("open mysql failed,", err)
+		log.Println("mysql connect fail", err)
 		return
 	}
 	Db = database
+	log.Println("mysql connect successful")
 	// defer Db.Close()
 }
 
@@ -38,7 +42,9 @@ func main() {
 	http.HandleFunc("/update/person", UpdatePerson)
 	http.HandleFunc("/delete/person", DeletePerson)
 	http.HandleFunc("/transaction/person", TransactionPerson)
-	http.ListenAndServe("127.0.0.1:9000", nil)
+	log.Println("服务启动前")
+	http.ListenAndServe("0.0.0.0:9000", nil)
+	log.Println("服务启动成功")
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
